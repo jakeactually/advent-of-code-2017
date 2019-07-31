@@ -2,62 +2,61 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 )
 
 type Group struct {
-	children []*Group
+	children []Group
 }
 
 func main() {
-	//str := "{{<a!>},{<a!>},{<a!>},{<ab>}}"
-	str := "{2¿{sdf}i{j}ii}"
-	a, _ := parse([]rune(str))
-	printGroup(a)
+	text, _ := ioutil.ReadFile("input.txt")
+	g, _ := parse([]rune(string(text)))
+	fmt.Println(getValue(g, 1))
 }
 
-func parse(str []rune) (*Group, []rune) {
-	var children []*Group
-	var child *Group
-	rest := str
+func parse(str []rune) (Group, []rune) {
+	rest := str[1:]
 
-	// eat bracket
-	if len(str) == 0 || str[0] != '{' {
-		return nil, str
-	}
-	rest = rest[1:]
+	var children []Group
+	var child Group
+	garbageState := false
 
-	// eat any
-	index := 0
-	for i, char := range rest {
-		if char == '{' {
-			index = i
-			break
-		}
-		if char == '}' {
-			return &Group{children}, rest[i:]
-		}
-	}
-	rest = rest[index:]
-
-	// children
 	for {
-		child, rest = parse(rest)
-		if child == nil {
-			break
+	loop:
+		for i, char := range rest {
+			switch char {
+			case '!':
+				rest = rest[i+2:]
+				break loop
+			case '<':
+				garbageState = true
+			case '>':
+				garbageState = false
+			case '{':
+				if !garbageState {
+					child, rest = parse(rest[i:])
+					children = append(children, child)
+					break loop
+				}
+			case '}':
+				if !garbageState {
+					return Group{children}, rest[i+1:]
+				}
+			}
 		}
-		children = append(children, child)
 	}
-
-	// eat bracket
-	if len(rest) == 0 || rest[0] != '}' {
-		return nil, rest
-	}
-	rest = rest[1:]
-
-	return &Group{children}, rest
 }
 
-func printGroup(group *Group) {
+func getValue(group Group, level int) int {
+	value := level
+	for _, child := range group.children {
+		value += getValue(child, level+1)
+	}
+	return value
+}
+
+func printGroup(group Group) {
 	fmt.Print("{")
 	for _, child := range group.children {
 		printGroup(child)

@@ -8,13 +8,6 @@ import (
 	"strconv"
 )
 
-type Layer struct {
-	depth int
-	rng   int
-	pos   int
-	down  bool
-}
-
 func main() {
 	file, _ := os.Open("input.txt")
 	scanner := bufio.NewScanner(file)
@@ -30,8 +23,8 @@ func main() {
 
 	sum := 0
 	for x := 0; x < 98+1; x++ {
-		for j := range layers {
-			layer := &layers[j]
+		for i := range layers {
+			layer := &layers[i]
 
 			if x == layer.depth && layer.pos == 0 {
 				sum += layer.depth * layer.rng
@@ -42,6 +35,13 @@ func main() {
 	}
 
 	fmt.Println(sum)
+}
+
+type Layer struct {
+	depth int
+	rng   int
+	pos   int
+	down  bool
 }
 
 func (layer *Layer) step() {

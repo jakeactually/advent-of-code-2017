@@ -39,14 +39,6 @@ func main() {
 	fmt.Println(len(topo.ConnectedComponents(g)))
 }
 
-type Node struct {
-	id int64
-}
-
-func (node Node) ID() int64 {
-	return node.id
-}
-
 func nodeOrNew(g *simple.UndirectedGraph, id int64) graph.Node {
 	node := g.Node(id)
 	if node == nil {
@@ -55,4 +47,12 @@ func nodeOrNew(g *simple.UndirectedGraph, id int64) graph.Node {
 		return newNode
 	}
 	return node
+}
+
+type Node struct {
+	id int64
+}
+
+func (node Node) ID() int64 {
+	return node.id
 }

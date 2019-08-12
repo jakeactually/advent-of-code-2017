@@ -12,8 +12,8 @@ func main() {
 	file, _ := os.Open("input.txt")
 	scanner := bufio.NewScanner(file)
 	regex, _ := regexp.Compile("\\d+")
-	var layers []Layer
 
+	var layers []Layer
 	for scanner.Scan() {
 		strs := regex.FindAllString(scanner.Text(), -1)
 		depth, _ := strconv.Atoi(strs[0])

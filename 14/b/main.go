@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+
+	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/simple"
+	"gonum.org/v1/gonum/graph/topo"
 )
 
 const size = 256
@@ -10,10 +14,10 @@ const key = "uugsqrei"
 var suffix = []int{17, 31, 73, 47, 23}
 
 func main() {
-	sum := 0
+	var bits [128][128]int
 
-	for i := 0; i < 128; i++ {
-		entry := fmt.Sprint(key, "-", i)
+	for y := 0; y < 128; y++ {
+		entry := fmt.Sprint(key, "-", y)
 
 		var bytes []int
 		for _, chr := range entry {
@@ -21,14 +25,33 @@ func main() {
 		}
 		bytes = append(bytes, suffix...)
 
-		for _, col := range hash(bytes) {
+		for i, col := range hash(bytes) {
 			for j := 0; j < 8; j++ {
-				sum += col >> uint(j) & 1
+				bits[y][i*8+j] = col >> uint(7-j) & 1
 			}
 		}
 	}
 
-	fmt.Println(sum)
+	g := simple.NewUndirectedGraph()
+	for y := int64(0); y < 128; y++ {
+		for x := int64(0); x < 128; x++ {
+			if bits[y][x] == 1 {
+				node := nodeOrNew(g, x, y)
+
+				if y < 127 && bits[y+1][x] == 1 {
+					neighbor := nodeOrNew(g, x, y+1)
+					g.SetEdge(g.NewEdge(node, neighbor))
+				}
+
+				if x < 127 && bits[y][x+1] == 1 {
+					neighbor := nodeOrNew(g, x+1, y)
+					g.SetEdge(g.NewEdge(node, neighbor))
+				}
+			}
+		}
+	}
+
+	fmt.Println(len(topo.ConnectedComponents(g)))
 }
 
 func hash(lengths []int) [16]int {
@@ -64,4 +87,22 @@ func hash(lengths []int) [16]int {
 	}
 
 	return hash
+}
+
+func nodeOrNew(g *simple.UndirectedGraph, x, y int64) graph.Node {
+	node := g.Node(y*128 + x)
+	if node == nil {
+		newNode := Node{x, y}
+		g.AddNode(newNode)
+		return newNode
+	}
+	return node
+}
+
+type Node struct {
+	x, y int64
+}
+
+func (node Node) ID() int64 {
+	return node.y*128 + node.x
 }
